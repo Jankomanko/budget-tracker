@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import TransactionForm from '../components/TransactionForm';
 import TransactionList from '../components/TransactionList';
+import SpendingChart from '../components/SpendingChart';
 
 export default function Home() {
     const [transactions, setTransactions] = useState([]);
+    const [filter, setFilter] = useState('All');
 
     useEffect(() => {
         fetch('/api/transactions')
@@ -31,6 +33,9 @@ export default function Home() {
     const income  = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
     const balance = income - expense;
+    const filtered = filter === 'All'
+        ? transactions
+        : transactions.filter(t => t.category === filter);
 
     return (
         <main className="max-w-2xl mx-auto p-6">
@@ -49,8 +54,25 @@ export default function Home() {
                 ))}
             </div>
 
+            <SpendingChart transactions={transactions} />
+            {/* filter */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                {['All', 'Food', 'Rent', 'Salary', 'Transport', 'Entertainment', 'Other'].map(cat => (
+                    <button
+                        key={cat}
+                        onClick={() => setFilter(cat)}
+                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                            filter === cat
+                                ? 'bg-gray-800 text-white border-gray-800'
+                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                        }`}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
             <TransactionForm onAdd={handleAdd} />
-            <TransactionList transactions={transactions} onDelete={handleDelete} />
+            <TransactionList transactions={filtered} onDelete={handleDelete} />
         </main>
     );
 }
